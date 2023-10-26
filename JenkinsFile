@@ -4,7 +4,7 @@ pipeline {
     environment {
         // Set the Docker Hub credentials from Jenkins credentials
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        IMAGE_NAME = 'your-dockerhub-username/your-image-name'
+        IMAGE_NAME = 'akt231/hello_world'
     }
 
     stages {
