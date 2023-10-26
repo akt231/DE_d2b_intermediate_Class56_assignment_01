@@ -1,32 +1,31 @@
 pipeline {
-    agent any
-
-    environment {
-        // Set the Docker Hub credentials from Jenkins credentials
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        IMAGE_NAME = 'akt231/hello_world'
+  agent any
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '5'))
+  }
+  environment {
+    DOCKERHUB_CREDENTIALS = credentials('docker-access-key')
+  }
+  stages {
+    stage('Build') {
+      steps {
+        sh 'docker build -t akt231/jenkins-docker-hub .'
+      }
     }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build and Push Docker Image') {
-            steps {
-                script {
-                    // Build the Docker image
-                    docker.build(IMAGE_NAME, "-f Dockerfile .")
-
-                    // Log in to Docker Hub using credentials
-                    docker.withRegistry('https://registry-1.docker.io', DOCKERHUB_CREDENTIALS) {
-                        // Push the Docker image to Docker Hub
-                        docker.image(IMAGE_NAME).push()
-                    }
-                }
-            }
-        }
+    stage('Login') {
+      steps {
+        sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+      }
     }
+    stage('Push') {
+      steps {
+        sh 'docker push akt231/jenkins-docker-hub'
+      }
+    }
+  }
+  post {
+    always {
+      sh 'docker logout'
+    }
+  }
 }
