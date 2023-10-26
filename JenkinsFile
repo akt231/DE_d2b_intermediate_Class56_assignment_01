@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+
+    environment {
+        // Set the Docker Hub credentials from Jenkins credentials
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        IMAGE_NAME = 'your-dockerhub-username/your-image-name'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build and Push Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image
+                    docker.build(IMAGE_NAME, "-f Dockerfile .")
+
+                    // Log in to Docker Hub using credentials
+                    docker.withRegistry('https://registry-1.docker.io', DOCKERHUB_CREDENTIALS) {
+                        // Push the Docker image to Docker Hub
+                        docker.image(IMAGE_NAME).push()
+                    }
+                }
+            }
+        }
+    }
+}
